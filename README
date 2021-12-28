@@ -1,0 +1,10 @@
+Syntax
+
+admin.exe -email="test@test.com" -command="create/delete"
+
+COMMAND
+
+create:create user associated with given email
+delete:delete user associated with given email
+
+if -command isn't used then it will display user info (if email is valid)

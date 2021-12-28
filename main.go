@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -29,14 +30,23 @@ func main() {
 	}
 	email = *_email
 	ctx := context.Background()
-	uid := getUserUIDByEmail(email, ctx, client)
 
-	if *command == "delete" {
+	fmt.Println(*command)
+	switch *command {
+
+	case "delete":
+		uid := getUserUIDByEmail(email, ctx, client)
 		deleteUser(ctx, client, uid)
-	} else {
+
+	case "create":
+		createUser(ctx, client, email)
+
+	default:
+		uid := getUserUIDByEmail(email, ctx, client)
 		fmt.Printf("Email :%v\n", email)
 		fmt.Printf("User ID :%v\n", uid)
 	}
+
 }
 
 func getUserUIDByEmail(email string, ctx context.Context, client *auth.Client) string {
@@ -65,6 +75,33 @@ func deleteUser(ctx context.Context, client *auth.Client, uid string) {
 	} else {
 		fmt.Println("Operation canceled, bye")
 	}
+}
+
+func createUser(ctx context.Context, client *auth.Client, email string) *auth.UserRecord {
+	reader := bufio.NewReader(os.Stdin)
+
+	/*
+		fmt.Print("Enter email address : ")
+		email, _ := reader.ReadString('\n')
+		email = strings.Replace(email, "\n", "", -1)
+		email = strings.Replace(email, "\r", "", -1)
+	*/
+
+	fmt.Print("Enter Password : ")
+	password, _ := reader.ReadString('\n')
+	password = strings.Replace(password, "\n", "", -1)
+	password = strings.Replace(password, "\r", "", -1)
+
+	params := (&auth.UserToCreate{}).
+		Email(email).
+		Password(password).
+		Disabled(false)
+	u, err := client.CreateUser(ctx, params)
+	if err != nil {
+		log.Fatalf("error creating user: %v\n", err)
+	}
+	log.Printf("Successfully created user: %v\n", u)
+	return u
 }
 
 func check(err error) {
