@@ -41,6 +41,9 @@ func main() {
 	case "create":
 		createUser(ctx, client, email)
 
+	case "update":
+		updateUser(ctx, client, email)
+
 	default:
 		uid := getUserUIDByEmail(email, ctx, client)
 		fmt.Printf("Email :%v\n", email)
@@ -101,6 +104,52 @@ func createUser(ctx context.Context, client *auth.Client, email string) *auth.Us
 		log.Fatalf("error creating user: %v\n", err)
 	}
 	log.Printf("Successfully created user: %v\n", u)
+	return u
+}
+
+func updateUser(ctx context.Context, client *auth.Client, email string) *auth.UserRecord {
+	//need to ask the user first
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Edit user data for user with email %v\n", email)
+
+	//ask new email
+	fmt.Printf("Enter new email : ")
+	newEmail, _ := reader.ReadString('\n')
+	newEmail = strings.Replace(newEmail, "\n", "", -1)
+	newEmail = strings.Replace(newEmail, "\r", "", -1)
+	if len(newEmail) < 3 {
+		fmt.Println("using old email")
+		newEmail = email
+	}
+
+	//ask password
+	fmt.Print("Enter Password : ")
+	newPassword, _ := reader.ReadString('\n')
+	newPassword = strings.Replace(newPassword, "\n", "", -1)
+	newPassword = strings.Replace(newPassword, "\r", "", -1)
+	if len(newPassword) < 3 {
+		fmt.Println("using old password")
+	}
+
+	//ask display name
+	fmt.Print("Enter display name : ")
+	newDisplayName, _ := reader.ReadString('\n')
+	newDisplayName = strings.Replace(newDisplayName, "\n", "", -1)
+	newDisplayName = strings.Replace(newDisplayName, "\r", "", -1)
+
+	//get uid
+	uid := getUserUIDByEmail(email, ctx, client)
+
+	params := (&auth.UserToUpdate{}).
+		Email(newEmail).
+		Password(newPassword).
+		DisplayName(newDisplayName)
+
+	u, err := client.UpdateUser(ctx, uid, params)
+	if err != nil {
+		log.Fatalf("error updating user: %v\n", err)
+	}
+	log.Printf("Successfully updated user: %v\n", u)
 	return u
 }
 
