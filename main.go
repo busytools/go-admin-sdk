@@ -44,6 +44,9 @@ func main() {
 	case "update":
 		updateUser(ctx, client, email)
 
+	case "switch":
+		switchUser(ctx, client, email)
+
 	default:
 		uid := getUserUIDByEmail(email, ctx, client)
 		fmt.Printf("Email :%v\n", email)
@@ -150,6 +153,44 @@ func updateUser(ctx context.Context, client *auth.Client, email string) *auth.Us
 		log.Fatalf("error updating user: %v\n", err)
 	}
 	log.Printf("Successfully updated user: %v\n", u)
+	return u
+}
+
+func switchUser(ctx context.Context, client *auth.Client, email string) *auth.UserRecord {
+	//need to ask the user first
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Enable/Disable user with email %v\n", email)
+
+	//ask operation
+	fmt.Print("Enter enable/disable : ")
+
+	ops, _ := reader.ReadString('\n')
+	ops = strings.Replace(ops, "\n", "", -1)
+	ops = strings.Replace(ops, "\r", "", -1)
+
+	//get uid
+	uid := getUserUIDByEmail(email, ctx, client)
+	var u *auth.UserRecord
+	if ops == "enable" {
+		params := (&auth.UserToUpdate{}).
+			Disabled(false)
+		u, err := client.UpdateUser(ctx, uid, params)
+		if err != nil {
+			log.Fatalf("error updating user: %v\n", err)
+		}
+		log.Printf("Successfully updated user: %v\n", u)
+
+	} else if ops == "disable" {
+		params := (&auth.UserToUpdate{}).
+			Disabled(true)
+		u, err := client.UpdateUser(ctx, uid, params)
+		if err != nil {
+			log.Fatalf("error updating user: %v\n", err)
+		}
+		log.Printf("Successfully updated user: %v\n", u)
+	} else {
+		log.Fatal("Sorry, i don't know that command")
+	}
 	return u
 }
 
